@@ -32,26 +32,26 @@ func NewWindowSliderCounter(bucketCount, budgetMS, maxCount int64) *WindowSlider
 		maxCount:    maxCount,
 		buckets:     make(map[int64]*Bucket, bucketCount),
 	}
-	//go func() {
-	//	for {
-	//		select {
-	//		case <-time.After(time.Duration(budgetMS) * time.Millisecond):
-	//			end := res.getRemoveEnd()
-	//			for k, _ := range res.buckets {
-	//				if k >= end {
-	//					continue
-	//				}
-	//				delete(res.buckets, k)
-	//			}
-	//			fmt.Sscanln("after remove, len:%v", len(res.buckets)) //仅用于测试，不准确
-	//		}
-	//	}
-	//}()
+	go func() {
+		for {
+			select {
+			case <-time.After(time.Duration(budgetMS) * time.Millisecond):
+				end := res.getRemoveEnd()
+				for k, _ := range res.buckets {
+					if k >= end {
+						continue
+					}
+					delete(res.buckets, k)
+				}
+				fmt.Printf("after remove, len:%v \n", len(res.buckets)) //仅用于测试，不准确
+			}
+		}
+	}()
 	return res
 }
 
 func (c *WindowSliderCounter) getRemoveEnd() int64 {
-	return (time.Now().UnixNano() - c.windowNS + c.bucketNS - 1) / c.bucketNS
+	return (time.Now().UnixNano() - c.windowNS) / c.bucketNS
 }
 
 func (c *WindowSliderCounter) Check() bool {
